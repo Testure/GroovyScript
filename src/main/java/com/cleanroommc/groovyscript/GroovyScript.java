@@ -1,7 +1,6 @@
 package com.cleanroommc.groovyscript;
 
 import com.cleanroommc.groovyscript.api.GroovyBlacklist;
-import com.cleanroommc.groovyscript.brackets.BracketHandlerManager;
 import com.cleanroommc.groovyscript.command.CustomClickAction;
 import com.cleanroommc.groovyscript.command.GSCommand;
 import com.cleanroommc.groovyscript.compat.content.GroovyResourcePack;
@@ -11,6 +10,7 @@ import com.cleanroommc.groovyscript.compat.mods.tinkersconstruct.TinkersConstruc
 import com.cleanroommc.groovyscript.compat.vanilla.VanillaModule;
 import com.cleanroommc.groovyscript.core.mixin.DefaultResourcePackAccessor;
 import com.cleanroommc.groovyscript.event.EventHandler;
+import com.cleanroommc.groovyscript.gameobjects.GameObjectHandlerManager;
 import com.cleanroommc.groovyscript.helper.JsonHelper;
 import com.cleanroommc.groovyscript.network.CReload;
 import com.cleanroommc.groovyscript.network.NetworkHandler;
@@ -39,6 +39,7 @@ import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
@@ -63,9 +64,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.Random;
 
 @GroovyBlacklist
-@Mod(modid = GroovyScript.ID, name = GroovyScript.NAME, version = GroovyScript.VERSION)
+@Mod(modid = GroovyScript.ID,
+     name = GroovyScript.NAME,
+     version = GroovyScript.VERSION,
+     dependencies = "after:universaltweaks@[1.8.0,);")
 @Mod.EventBusSubscriber(modid = GroovyScript.ID)
 public class GroovyScript {
 
@@ -89,6 +94,8 @@ public class GroovyScript {
 
     private static final Joiner fileJoiner = Joiner.on(File.separator);
 
+    public static final Random RND = new Random();
+
     @Mod.EventHandler
     public void onConstruction(FMLConstructionEvent event) {
         MinecraftForge.EVENT_BUS.register(this);
@@ -102,6 +109,7 @@ public class GroovyScript {
         } catch (MalformedURLException e) {
             throw new IllegalStateException("Error initializing sandbox!");
         }
+        ModSupport.INSTANCE.setup(event.getASMHarvestedData());
 
         if (NetworkUtils.isDedicatedClient()) {
             // this resource pack must be added in construction
@@ -109,6 +117,8 @@ public class GroovyScript {
             reloadKey = new KeyBinding("key.groovyscript.reload", KeyConflictContext.IN_GAME, KeyModifier.CONTROL, Keyboard.KEY_R, "key.categories.groovyscript");
             ClientRegistry.registerKeyBinding(reloadKey);
         }
+
+        FluidRegistry.enableUniversalBucket();
     }
 
     @Mod.EventHandler
@@ -137,7 +147,7 @@ public class GroovyScript {
     @ApiStatus.Internal
     public static void initializeGroovyPreInit() {
         // called via mixin in between construction and fml pre init
-        BracketHandlerManager.init();
+        GameObjectHandlerManager.init();
         VanillaModule.initializeBinding();
         ModSupport.init();
 
