@@ -2,7 +2,7 @@ package com.cleanroommc.groovyscript.api;
 
 import org.jetbrains.annotations.ApiStatus;
 
-public interface IScriptReloadable {
+public interface IScriptReloadable extends INamed {
 
     @GroovyBlacklist
     @ApiStatus.OverrideOnly

@@ -1,0 +1,146 @@
+//file:noinspection DependencyNotationArgument
+// TODO remove when fixed in RFG ^
+/*
+ * Add your dependencies here. Common configurations:
+ *  - implementation("group:name:version:classifier"): if you need this for internal implementation details of the mod.
+ *       Available at compiletime and runtime for your environment.
+ *
+ *  - compileOnlyApi("g:n:v:c"): if you need this for internal implementation details of the mod.
+ *       Available at compiletime but not runtime for your environment.
+ *
+ *  - annotationProcessor("g:n:v:c"): mostly for java compiler plugins, if you know you need this, use it, otherwise don't worry
+ *
+ *  - testCONFIG("g:n:v:c"): replace CONFIG by one of the above, same as above but for the test sources instead of main
+ *
+ * You can exclude transitive dependencies (dependencies of the chosen dependency) by appending { transitive = false } if needed.
+ *
+ * To add a mod with CurseMaven, replace '("g:n:v:c")' in the above with 'rfg.deobf("curse.maven:project_slug-project_id:file_id")'
+ * Example: implementation rfg.deobf("curse.maven:gregtech-ce-unofficial-557242:4527757")
+ *
+ * To shadow a dependency, use 'shadowImplementation'. For more info, see https://github.com/GregTechCEu/Buildscripts/blob/master/docs/shadow.md
+ *
+ * For more details, see https://docs.gradle.org/8.0.1/userguide/java_library_plugin.html#sec:java_library_configurations_graph
+ */
+
+// A hash map of curse maven mods to debug options that will enable it in runtime.
+// Anything that should be handled differently than always being "compileOnly" and also being "runtimeOnly" when debug enabled
+// should be handled in the main dependencies function.
+// Sorted by alphabetical name of the `project.debug_[this]` value
+final def mod_dependencies = [
+        'actually-additions-228404:3117927'                   : [project.debug_actually_additions],
+        'advancedmortars-283777:2780626'                      : [project.debug_adv_mortars],
+        'aether-255308:3280119'                               : [project.debug_aether],
+        'alchemistry-293425:3186612'                          : [project.debug_alchemistry],
+        'alchemylib-293426:2761706'                           : [project.debug_alchemistry],
+        'shadowfacts-forgelin-248453:2785465'                 : [project.debug_alchemistry],
+        'ae2-extended-life-570458:4553942'                    : [project.debug_applied_energistics_2],
+        'arcane-archives-311357:3057332'                      : [project.debug_arcane_archives],
+        'guidebook-253874:2989594'                            : [project.debug_arcane_archives],
+        'mystical_lib-277064:3483816'                         : [project.debug_arcane_archives, project.debug_roots],
+        'astralsorcery-sorcery-241721:3044416'                : [project.debug_astral],
+        'baubles-227083:2518667'                              : [project.debug_astral, project.debug_botania, project.debug_thaum],
+        'avaritia_1_10-261348:3143349'                        : [project.debug_avaritia],
+        'bwm-core-294335:2624990'                             : [project.debug_better_with_mods],
+        'bwm-suite-246760:3289033'                            : [project.debug_better_with_mods],
+        'blood-magic-224791:2822288'                          : [project.debug_blood_magic],
+        'guide-api-228832:2645992'                            : [project.debug_blood_magic, project.debug_woot],
+        'botania-225643:3330934'                              : [project.debug_botania],
+        'calculator-225104:2847174'                           : [project.debug_calculator],
+        'sonar-core-239418:2645156'                           : [project.debug_calculator],
+        'chisel-235279:2915375'                               : [project.debug_chisel],
+        'ctm-267602:2915363'                                  : [project.debug_chisel],
+        'compact-machines-224218:2707509'                     : [project.debug_compact_machines],
+        'brandons_core-231382:3408276'                        : [project.debug_draconic_evolution],
+        'draconic_evolution-223565:3431261'                   : [project.debug_draconic_evolution],
+        'redstone_flux-270789:2920436'                        : [project.debug_draconic_evolution, project.debug_thermal],
+        'cyclops-core-232758:3159497'                         : [project.debug_evilcraft, project.debug_integrated_dynamics],
+        'evilcraft-74610:2811267'                             : [project.debug_evilcraft],
+        'cucumber-272335:2645867'                             : [project.debug_extended_crafting],
+        'extended-crafting-nomifactory-edition-398267:3613140': [project.debug_extended_crafting],
+        'extra-utilities-2-225561:2678374'                    : [project.debug_extra_utilities_2],
+        'forestry-59751:2918418'                              : [project.debug_forestry],
+        'immersive_engineering-231951:2974106'                : [project.debug_immersive_engineering],
+        // WARNING: experimental must be placed before classic, otherwise you will crash when debugging either. Check FluidGenerator compat to confirm
+        'industrialcraft_experimental-242638:3838713'         : [project.debug_industrial_craft_2_experimental],
+        'industrialcraft_classic-242942:3093607'              : [project.debug_industrial_craft_2_classic],
+        'inspirations-284007:2843007'                         : [project.debug_inspirations],
+        'mantle-74924:2713386'                                : [project.debug_inspirations, project.debug_tinkers],
+        'common-capabilities-247007:3053017'                  : [project.debug_integrated_dynamics],
+        'integrated-dynamics-236307:3159505'                  : [project.debug_integrated_dynamics],
+        'mekanism-268560:2835175'                             : [project.debug_mekanism],
+        'natures-aura-306626:2882138'                         : [project.debug_natures_aura],
+        'packmode-278398:2567799'                             : [project.debug_packmode],
+        'athenaeum-284350:4633750'                            : [project.debug_pyrotech],
+        'pyrotech-306676:4956838'                             : [project.debug_pyrotech],
+        'mystical_world-282940:3460961'                       : [project.debug_roots],
+        'patchouli-306770:3162874'                            : [project.debug_roots, project.debug_natures_aura],
+        'roots-246183:3905074'                                : [project.debug_roots],
+        'rustic-256141:3107974'                               : [project.debug_rustic],
+        'thaumcraft-223628:2629023'                           : [project.debug_thaum],
+        'cofh_core-69162:2920433'                             : [project.debug_thermal],
+        'cofh_world-271384:2920434'                           : [project.debug_thermal],
+        'thermal_expansion-69163:2926431'                     : [project.debug_thermal],
+        'thermal_foundation-222880:2926428'                   : [project.debug_thermal],
+        'constructs-armory-287683:3174535'                    : [project.debug_tinkers],
+        'tinkers-complement-272671:2843439'                   : [project.debug_tinkers],
+        'tinkers_construct-74072:2902483'                     : [project.debug_tinkers],
+        'woot-244049:2712670'                                 : [project.debug_woot],
+]
+
+dependencies {
+    embed "org.apache.groovy:groovy:${project.groovy_version}"
+
+    // TODO: check if there is anything to exclude
+    embed "io.github.classgraph:classgraph:4.8.165"
+
+    lsp4j("org.eclipse.lsp4j:org.eclipse.lsp4j:0.20.1") {
+        exclude group: 'com.google.guava', module: 'guava'
+        exclude group: 'com.google.code.gson', module: 'gson'
+    }
+    lsp4j("org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.20.1") {
+        exclude group: 'com.google.guava', module: 'guava'
+        exclude group: 'com.google.code.gson', module: 'gson'
+    }
+
+    api "codechicken:codechickenlib:3.2.3.358"
+
+    // compiles all mods, and selectively enables mods being debugged
+    mod_dependencies.entrySet().forEach {
+        def mod = rfg.deobf('curse.maven:' + it.key)
+        compileOnly mod
+        if (it.value.any { it.toBoolean() }) {
+            runtimeOnly mod
+        }
+    }
+
+    if (project.debug_thaum.toBoolean()) {
+        runtimeOnly 'curse.maven:thaumic_jei-285492:2705304'
+    }
+
+    compileOnly 'com.enderio:endercore:0.5.78'
+    compileOnly 'crazypants:enderio:5.3.72'
+    if (project.debug_enderio.toBoolean()) {
+        runtimeOnly 'com.enderio:endercore:0.5.78'
+        runtimeOnly 'crazypants:enderio:5.3.72'
+    }
+
+    if (project.debug_forestry.toBoolean()) {
+        runtimeOnly rfg.deobf('curse.maven:jei-bees-248370:2490058')
+    }
+
+    if (project.debug_pyrotech.toBoolean()) {
+        runtimeOnly rfg.deobf("curse.maven:dropt-284973:3758733")
+    }
+
+}
+
+minecraft {
+    injectedTags.put 'GROOVY_VERSION', groovy_version
+
+    if (project.debug_use_examples_folder.toBoolean()) {
+        extraRunJvmArguments.add('-Dgroovyscript.use_examples_folder=true')
+    }
+    if (project.debug_run_ls.toBoolean()) {
+        extraRunJvmArguments.add('-Dgroovyscript.run_ls=true')
+    }
+}

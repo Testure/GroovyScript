@@ -2,6 +2,7 @@ package com.cleanroommc.groovyscript.helper;
 
 import com.cleanroommc.groovyscript.GroovyScript;
 import com.cleanroommc.groovyscript.api.GroovyBlacklist;
+import com.cleanroommc.groovyscript.packmode.Packmode;
 import com.cleanroommc.groovyscript.registry.ReloadableRegistryManager;
 import com.cleanroommc.groovyscript.sandbox.LoadStage;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -73,5 +74,33 @@ public class GroovyHelper {
 
     public static boolean isDedicatedServer() {
         return FMLCommonHandler.instance().getSide().isServer();
+    }
+
+    public static String getPackmode() {
+        return Packmode.getPackmode();
+    }
+
+    public static boolean isPackmode(String packmode) {
+        return getPackmode().equalsIgnoreCase(packmode);
+    }
+
+    public static String getMinecraftHome() {
+        return GroovyScript.getMinecraftHome().getPath();
+    }
+
+    public static GroovyFile file(String path) {
+        return new GroovyFile(path);
+    }
+
+    public static GroovyFile file(String parent, String child) {
+        return new GroovyFile(parent, child);
+    }
+
+    public static GroovyFile file(GroovyFile parent, String child) {
+        return new GroovyFile(parent, child);
+    }
+
+    public static GroovyFile file(String... parts) {
+        return new GroovyFile(parts);
     }
 }

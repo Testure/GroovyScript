@@ -3,6 +3,7 @@ package com.cleanroommc.groovyscript.compat.content;
 import com.cleanroommc.groovyscript.GroovyScript;
 import com.cleanroommc.groovyscript.api.GroovyBlacklist;
 import com.cleanroommc.groovyscript.helper.JsonHelper;
+import com.cleanroommc.groovyscript.sandbox.FileUtil;
 import com.google.gson.JsonObject;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -13,6 +14,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fluids.*;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.registries.IForgeRegistry;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
@@ -42,6 +45,7 @@ public class GroovyFluid extends Fluid {
 
     @GroovyBlacklist
     @ApiStatus.Internal
+    @SideOnly(Side.CLIENT)
     public static void initTextures(TextureMap map) {
         for (GroovyFluid fluid : fluids) {
             map.registerSprite(fluid.flowing);
@@ -54,6 +58,7 @@ public class GroovyFluid extends Fluid {
 
     @GroovyBlacklist
     @ApiStatus.Internal
+    @SideOnly(Side.CLIENT)
     public static void registerModels() {
         for (BlockFluidBase block : fluidBlocks) {
             ModelLoader.setCustomStateMapper(block, new StateMap.Builder().ignore(BlockFluidClassic.LEVEL).build());
@@ -65,7 +70,7 @@ public class GroovyFluid extends Fluid {
     }
 
     private static void checkBlockState(ResourceLocation loc) {
-        File file = GroovyScript.makeFile(GroovyScript.getResourcesFile(), loc.getNamespace(), "blockstates", loc.getPath() + ".json");
+        File file = FileUtil.makeFile(GroovyScript.getResourcesFile().getPath(), loc.getNamespace(), "blockstates", loc.getPath() + ".json");
         if (!file.exists()) {
             JsonObject stateJson = new JsonObject();
             stateJson.addProperty("forge_marker", 1);

@@ -1,84 +1,30 @@
 package com.cleanroommc.groovyscript.compat.mods.avaritia;
 
 import com.cleanroommc.groovyscript.api.GroovyLog;
-import com.cleanroommc.groovyscript.api.IIngredient;
+import com.cleanroommc.groovyscript.api.documentation.annotations.Comp;
+import com.cleanroommc.groovyscript.api.documentation.annotations.Property;
+import com.cleanroommc.groovyscript.api.documentation.annotations.RecipeBuilderRegistrationMethod;
 import com.cleanroommc.groovyscript.compat.mods.ModSupport;
-import com.cleanroommc.groovyscript.compat.vanilla.CraftingRecipeBuilder;
 import com.cleanroommc.groovyscript.helper.ingredient.IngredientHelper;
-import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
+import com.cleanroommc.groovyscript.registry.AbstractCraftingRecipeBuilder;
 import morph.avaritia.recipe.extreme.IExtremeRecipe;
-import org.apache.commons.lang3.ArrayUtils;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+public interface ExtremeRecipeBuilder {
 
-public abstract class ExtremeRecipeBuilder extends CraftingRecipeBuilder {
-
-    public ExtremeRecipeBuilder() {
-        super(9, 9);
-    }
-
-    public static class Shaped extends ExtremeRecipeBuilder {
-
-        private final Char2ObjectOpenHashMap<IIngredient> keyMap = new Char2ObjectOpenHashMap<>();
-        private final List<String> errors = new ArrayList<>();
-        protected boolean mirrored = false;
-        private String[] keyBasedMatrix;
-        private List<List<IIngredient>> ingredientMatrix;
+    @Property(property = "ingredientMatrix", valid = {@Comp(value = "1", type = Comp.Type.GTE), @Comp(value = "81", type = Comp.Type.LTE)})
+    class Shaped extends AbstractCraftingRecipeBuilder.AbstractShaped<IExtremeRecipe> {
 
         public Shaped() {
-            keyMap.put(' ', IIngredient.EMPTY);
-        }
-
-        public ExtremeRecipeBuilder.Shaped mirrored(boolean mirrored) {
-            this.mirrored = mirrored;
-            return this;
-        }
-
-        public ExtremeRecipeBuilder.Shaped mirrored() {
-            return mirrored(true);
-        }
-
-        public ExtremeRecipeBuilder.Shaped matrix(String... matrix) {
-            this.keyBasedMatrix = matrix;
-            return this;
-        }
-
-        public ExtremeRecipeBuilder.Shaped shape(String... matrix) {
-            this.keyBasedMatrix = matrix;
-            return this;
-        }
-
-        public ExtremeRecipeBuilder.Shaped row(String row) {
-            if (this.keyBasedMatrix == null) {
-                this.keyBasedMatrix = new String[]{row};
-            } else {
-                this.keyBasedMatrix = ArrayUtils.add(this.keyBasedMatrix, row);
-            }
-            return this;
-        }
-
-        public ExtremeRecipeBuilder.Shaped key(String c, IIngredient ingredient) {
-            if (c == null || c.length() != 1) {
-                errors.add("key must be a single char, but found '" + c + "'");
-                return this;
-            }
-            this.keyMap.put(c.charAt(0), ingredient);
-            return this;
-        }
-
-        public ExtremeRecipeBuilder.Shaped matrix(List<List<IIngredient>> matrix) {
-            this.ingredientMatrix = matrix;
-            return this;
-        }
-
-        public ExtremeRecipeBuilder.Shaped shape(List<List<IIngredient>> matrix) {
-            this.ingredientMatrix = matrix;
-            return this;
+            super(9, 9);
         }
 
         @Override
+        public String getRecipeNamePrefix() {
+            return "groovyscript_extreme_shaped_";
+        }
+
+        @Override
+        @RecipeBuilderRegistrationMethod(hierarchy = 5)
         public IExtremeRecipe register() {
             GroovyLog.Msg msg = GroovyLog.msg("Error adding shaped Extended Crafting Table recipe").error()
                     .add((keyBasedMatrix == null || keyBasedMatrix.length == 0) && (ingredientMatrix == null || ingredientMatrix.isEmpty()), () -> "No matrix was defined")
@@ -99,38 +45,18 @@ public abstract class ExtremeRecipeBuilder extends CraftingRecipeBuilder {
             }
             return recipe;
         }
+    }
+
+    @Property(property = "ingredients", valid = {@Comp(value = "1", type = Comp.Type.GTE), @Comp(value = "81", type = Comp.Type.LTE)})
+    class Shapeless extends AbstractCraftingRecipeBuilder.AbstractShapeless<IExtremeRecipe> {
+
+        public Shapeless() {
+            super(9, 9);
+        }
 
         @Override
         public String getRecipeNamePrefix() {
-            return "grs_extreme_shaped_";
-        }
-    }
-
-    public static class Shapeless extends ExtremeRecipeBuilder {
-
-        private final List<IIngredient> ingredients = new ArrayList<>();
-
-        public ExtremeRecipeBuilder.Shapeless input(IIngredient ingredient) {
-            ingredients.add(ingredient);
-            return this;
-        }
-
-        public ExtremeRecipeBuilder.Shapeless input(IIngredient... ingredients) {
-            if (ingredients != null) {
-                for (IIngredient ingredient : ingredients) {
-                    input(ingredient);
-                }
-            }
-            return this;
-        }
-
-        public ExtremeRecipeBuilder.Shapeless input(Collection<IIngredient> ingredients) {
-            if (ingredients != null && !ingredients.isEmpty()) {
-                for (IIngredient ingredient : ingredients) {
-                    input(ingredient);
-                }
-            }
-            return this;
+            return "groovyscript_extreme_shapeless_";
         }
 
         public boolean validate() {
@@ -142,6 +68,7 @@ public abstract class ExtremeRecipeBuilder extends CraftingRecipeBuilder {
         }
 
         @Override
+        @RecipeBuilderRegistrationMethod(hierarchy = 5)
         public IExtremeRecipe register() {
             if (!validate()) return null;
             validateName();
@@ -149,11 +76,6 @@ public abstract class ExtremeRecipeBuilder extends CraftingRecipeBuilder {
             recipe.setRegistryName(this.name);
             ModSupport.AVARITIA.get().extremeCrafting.add(recipe);
             return recipe;
-        }
-
-        @Override
-        public String getRecipeNamePrefix() {
-            return "grs_extreme_shapeless_";
         }
     }
 }

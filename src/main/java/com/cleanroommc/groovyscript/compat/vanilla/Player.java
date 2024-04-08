@@ -3,6 +3,7 @@ package com.cleanroommc.groovyscript.compat.vanilla;
 import com.cleanroommc.groovyscript.api.GroovyBlacklist;
 import com.cleanroommc.groovyscript.api.GroovyLog;
 import com.cleanroommc.groovyscript.api.IScriptReloadable;
+import com.cleanroommc.groovyscript.registry.NamedRegistry;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
@@ -10,7 +11,7 @@ import net.minecraft.item.ItemStack;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class Player implements IScriptReloadable {
+public class Player extends NamedRegistry implements IScriptReloadable {
 
     public static final String GIVEN_ITEMS = "GroovyScript:GivenItems";
 
@@ -104,6 +105,6 @@ public class Player implements IScriptReloadable {
     @Override
     @GroovyBlacklist
     public void afterScriptLoad() {
-
     }
+
 }

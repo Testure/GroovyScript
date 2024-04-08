@@ -1,130 +1,75 @@
 package com.cleanroommc.groovyscript.compat.mods.extendedcrafting;
 
+import com.blakebr0.extendedcrafting.crafting.table.ITieredRecipe;
 import com.blakebr0.extendedcrafting.crafting.table.TableRecipeShaped;
 import com.cleanroommc.groovyscript.api.GroovyLog;
-import com.cleanroommc.groovyscript.api.IIngredient;
+import com.cleanroommc.groovyscript.api.documentation.annotations.Comp;
+import com.cleanroommc.groovyscript.api.documentation.annotations.Property;
+import com.cleanroommc.groovyscript.api.documentation.annotations.RecipeBuilderMethodDescription;
+import com.cleanroommc.groovyscript.api.documentation.annotations.RecipeBuilderRegistrationMethod;
 import com.cleanroommc.groovyscript.compat.mods.ModSupport;
-import com.cleanroommc.groovyscript.compat.vanilla.CraftingRecipeBuilder;
 import com.cleanroommc.groovyscript.helper.ingredient.IngredientHelper;
-import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap;
-import net.minecraft.item.crafting.IRecipe;
-import org.apache.commons.lang3.ArrayUtils;
+import com.cleanroommc.groovyscript.registry.AbstractCraftingRecipeBuilder;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+public interface TableRecipeBuilder {
 
-public abstract class TableRecipeBuilder extends CraftingRecipeBuilder {
+    @RecipeBuilderMethodDescription
+    TableRecipeBuilder tier(int tier);
 
-    // 0 = any table it fits in, 1-4 specifically that tier of table
-    protected int tier = 0;
-
-    public TableRecipeBuilder() {
-        super(9, 9);
-    }
-
-    public TableRecipeBuilder tier(int tier) {
-        this.tier = tier;
-        int size = this.tier == 0 ? 9 : this.tier * 2 + 1;
-        this.width = size;
-        this.height = size;
-        return this;
-    }
-
-    public TableRecipeBuilder tierAny() {
+    @RecipeBuilderMethodDescription(field = "tier")
+    default TableRecipeBuilder tierAny() {
         return tier(0);
     }
 
-    public TableRecipeBuilder tierBasic() {
+    @RecipeBuilderMethodDescription(field = "tier")
+    default TableRecipeBuilder tierBasic() {
         return tier(1);
     }
 
-    public TableRecipeBuilder tierAdvanced() {
+    @RecipeBuilderMethodDescription(field = "tier")
+    default TableRecipeBuilder tierAdvanced() {
         return tier(2);
     }
 
-    public TableRecipeBuilder tierElite() {
+    @RecipeBuilderMethodDescription(field = "tier")
+    default TableRecipeBuilder tierElite() {
         return tier(3);
     }
 
-    public TableRecipeBuilder tierUltimate() {
+    @RecipeBuilderMethodDescription(field = "tier")
+    default TableRecipeBuilder tierUltimate() {
         return tier(4);
     }
 
-    public static class Shaped extends TableRecipeBuilder {
+    @Property(property = "ingredientMatrix", valid = {@Comp(value = "1", type = Comp.Type.GTE), @Comp(value = "81", type = Comp.Type.LTE)})
+    class Shaped extends AbstractCraftingRecipeBuilder.AbstractShaped<ITieredRecipe> implements TableRecipeBuilder {
 
-        private final Char2ObjectOpenHashMap<IIngredient> keyMap = new Char2ObjectOpenHashMap<>();
-        private final List<String> errors = new ArrayList<>();
-        protected boolean mirrored = false;
-        private String[] keyBasedMatrix;
-        private List<List<IIngredient>> ingredientMatrix;
+        // 0 = any table it fits in, 1-4 specifically that tier of table
+        @Property(valid = {@Comp(value = "0", type = Comp.Type.GTE), @Comp(value = "4", type = Comp.Type.LTE)})
+        int tier;
 
         public Shaped() {
-            keyMap.put(' ', IIngredient.EMPTY);
+            super(9, 9);
         }
 
-        public TableRecipeBuilder.Shaped mirrored(boolean mirrored) {
-            this.mirrored = mirrored;
-            return this;
+        @Override
+        public String getRecipeNamePrefix() {
+            return "groovyscript_table_shaped_";
         }
 
-        public TableRecipeBuilder.Shaped mirrored() {
-            return mirrored(true);
-        }
-
-        public TableRecipeBuilder.Shaped matrix(String... matrix) {
-            this.keyBasedMatrix = matrix;
-            return this;
-        }
-
-        public TableRecipeBuilder.Shaped shape(String... matrix) {
-            this.keyBasedMatrix = matrix;
-            return this;
-        }
-
-        public TableRecipeBuilder.Shaped row(String row) {
-            if (this.keyBasedMatrix == null) {
-                this.keyBasedMatrix = new String[]{row};
-            } else {
-                this.keyBasedMatrix = ArrayUtils.add(this.keyBasedMatrix, row);
-            }
-            return this;
-        }
-
-        public TableRecipeBuilder.Shaped key(char c, IIngredient ingredient) {
-            this.keyMap.put(c, ingredient);
-            return this;
-        }
-
-        public TableRecipeBuilder.Shaped key(String c, IIngredient ingredient) {
-            if (c == null || c.length() != 1) {
-                errors.add("key must be a single char, but found '" + c + "'");
-                return this;
-            }
-            this.keyMap.put(c.charAt(0), ingredient);
-            return this;
-        }
-
-        public TableRecipeBuilder.Shaped key(Map<String, IIngredient> map) {
-            for (Map.Entry<String, IIngredient> x : map.entrySet()) {
-                key(x.getKey(), x.getValue());
-            }
-            return this;
-        }
-
-        public TableRecipeBuilder.Shaped matrix(List<List<IIngredient>> matrix) {
-            this.ingredientMatrix = matrix;
-            return this;
-        }
-
-        public TableRecipeBuilder.Shaped shape(List<List<IIngredient>> matrix) {
-            this.ingredientMatrix = matrix;
+        @Override
+        @RecipeBuilderMethodDescription
+        public TableRecipeBuilder.Shaped tier(int tier) {
+            this.tier = tier;
+            int size = this.tier == 0 ? 9 : this.tier * 2 + 1;
+            this.width = size;
+            this.height = size;
             return this;
         }
 
         @Override
-        public IRecipe register() {
+        @RecipeBuilderRegistrationMethod
+        public ITieredRecipe register() {
             GroovyLog.Msg msg = GroovyLog.msg("Error adding shaped Extended Crafting Table recipe").error()
                     .add((keyBasedMatrix == null || keyBasedMatrix.length == 0) && (ingredientMatrix == null || ingredientMatrix.isEmpty()), () -> "No matrix was defined")
                     .add(keyBasedMatrix != null && ingredientMatrix != null, () -> "A key based matrix AND a ingredient based matrix was defined. This is not allowed!");
@@ -144,30 +89,29 @@ public abstract class TableRecipeBuilder extends CraftingRecipeBuilder {
         }
     }
 
-    public static class Shapeless extends TableRecipeBuilder {
+    @Property(property = "ingredients", valid = {@Comp(value = "1", type = Comp.Type.GTE), @Comp(value = "81", type = Comp.Type.LTE)})
+    class Shapeless extends AbstractCraftingRecipeBuilder.AbstractShapeless<ITieredRecipe> implements TableRecipeBuilder {
 
-        private final List<IIngredient> ingredients = new ArrayList<>();
+        // 0 = any table it fits in, 1-4 specifically that tier of table
+        @Property(valid = {@Comp(value = "0", type = Comp.Type.GTE), @Comp(value = "4", type = Comp.Type.LTE)})
+        int tier;
 
-        public TableRecipeBuilder.Shapeless input(IIngredient ingredient) {
-            ingredients.add(ingredient);
-            return this;
+        public Shapeless() {
+            super(9, 9);
         }
 
-        public TableRecipeBuilder.Shapeless input(IIngredient... ingredients) {
-            if (ingredients != null) {
-                for (IIngredient ingredient : ingredients) {
-                    input(ingredient);
-                }
-            }
-            return this;
+        @Override
+        public String getRecipeNamePrefix() {
+            return "groovyscript_table_shapeless_";
         }
 
-        public TableRecipeBuilder.Shapeless input(Collection<IIngredient> ingredients) {
-            if (ingredients != null && !ingredients.isEmpty()) {
-                for (IIngredient ingredient : ingredients) {
-                    input(ingredient);
-                }
-            }
+        @Override
+        @RecipeBuilderMethodDescription
+        public TableRecipeBuilder.Shapeless tier(int tier) {
+            this.tier = tier;
+            int size = this.tier == 0 ? 9 : this.tier * 2 + 1;
+            this.width = size;
+            this.height = size;
             return this;
         }
 
@@ -181,7 +125,8 @@ public abstract class TableRecipeBuilder extends CraftingRecipeBuilder {
         }
 
         @Override
-        public IRecipe register() {
+        @RecipeBuilderRegistrationMethod
+        public ITieredRecipe register() {
             if (!validate()) return null;
             ShapelessTableRecipe recipe = ShapelessTableRecipe.make(tier, output.copy(), ingredients, recipeFunction, recipeAction);
             ModSupport.EXTENDED_CRAFTING.get().tableCrafting.add(recipe);

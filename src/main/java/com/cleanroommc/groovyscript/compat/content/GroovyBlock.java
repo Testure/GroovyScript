@@ -5,6 +5,7 @@ import com.cleanroommc.groovyscript.api.GroovyBlacklist;
 import com.cleanroommc.groovyscript.api.GroovyLog;
 import com.cleanroommc.groovyscript.compat.vanilla.VanillaModule;
 import com.cleanroommc.groovyscript.helper.JsonHelper;
+import com.cleanroommc.groovyscript.sandbox.FileUtil;
 import com.google.gson.JsonObject;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import net.minecraft.block.Block;
@@ -16,6 +17,8 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.registries.IForgeRegistry;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.ApiStatus;
@@ -74,6 +77,7 @@ public class GroovyBlock extends Block {
 
     @GroovyBlacklist
     @ApiStatus.Internal
+    @SideOnly(Side.CLIENT)
     public static void registerModels() {
         for (Pair<Block, ItemBlock> pair : BLOCKS.values()) {
             Item item = pair.getRight();
@@ -105,7 +109,7 @@ public class GroovyBlock extends Block {
     }
 
     private static void checkBlockModel(ResourceLocation loc) {
-        File file = GroovyScript.makeFile(GroovyScript.getResourcesFile(), loc.getNamespace(), "blockstates", loc.getPath() + ".json");
+        File file = FileUtil.makeFile(GroovyScript.getResourcesFile().getPath(), loc.getNamespace(), "blockstates", loc.getPath() + ".json");
         if (!file.exists()) {
             JsonObject stateJson = new JsonObject();
             JsonObject variantsJson = new JsonObject();
@@ -116,7 +120,7 @@ public class GroovyBlock extends Block {
             JsonHelper.saveJson(file, stateJson);
         }
 
-        file = GroovyScript.makeFile(GroovyScript.getResourcesFile(), loc.getNamespace(), "models", "block", loc.getPath() + ".json");
+        file = FileUtil.makeFile(GroovyScript.getResourcesFile().getPath(), loc.getNamespace(), "models", "block", loc.getPath() + ".json");
         if (!file.exists()) {
             JsonObject modelJson = new JsonObject();
             modelJson.addProperty("parent", "block/cube_all");
@@ -128,7 +132,7 @@ public class GroovyBlock extends Block {
     }
 
     private static void checkItemModel(ResourceLocation loc) {
-        File file = GroovyScript.makeFile(GroovyScript.getResourcesFile(), loc.getNamespace(), "models", "item", loc.getPath() + ".json");
+        File file = FileUtil.makeFile(GroovyScript.getResourcesFile().getPath(), loc.getNamespace(), "models", "item", loc.getPath() + ".json");
         if (!file.exists()) {
             JsonObject modelJson = new JsonObject();
             modelJson.addProperty("parent", loc.getNamespace() + ":block/" + loc.getPath());

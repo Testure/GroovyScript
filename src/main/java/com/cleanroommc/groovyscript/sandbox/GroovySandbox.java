@@ -2,6 +2,7 @@ package com.cleanroommc.groovyscript.sandbox;
 
 import com.cleanroommc.groovyscript.GroovyScript;
 import com.cleanroommc.groovyscript.api.GroovyLog;
+import com.cleanroommc.groovyscript.api.INamed;
 import com.cleanroommc.groovyscript.helper.Alias;
 import groovy.lang.Binding;
 import groovy.lang.Closure;
@@ -30,19 +31,12 @@ import java.util.*;
  */
 public abstract class GroovySandbox {
 
-    private static final ThreadLocal<GroovySandbox> currentSandbox = new ThreadLocal<>();
-    // TODO
     private String currentScript = null;
-    private int currentLine = -1;
-
-    @Nullable
-    public static GroovySandbox getCurrentSandbox() {
-        return currentSandbox.get();
-    }
 
     private final URL[] scriptEnvironment;
     private final ThreadLocal<Boolean> running = ThreadLocal.withInitial(() -> false);
     private final Map<String, Object> bindings = new Object2ObjectOpenHashMap<>();
+    private final Set<Class<?>> staticImports = new HashSet<>();
 
     protected GroovySandbox(URL[] scriptEnvironment) {
         if (scriptEnvironment == null || scriptEnvironment.length == 0) {
@@ -63,19 +57,34 @@ public abstract class GroovySandbox {
         }
     }
 
+    public void registerBinding(INamed named) {
+        Objects.requireNonNull(named);
+        for (String alias : named.getAliases()) {
+            bindings.put(alias, named);
+        }
+    }
+
+    protected void registerStaticImports(Class<?>... classes) {
+        Objects.requireNonNull(classes);
+        if (classes.length == 0) {
+            throw new IllegalArgumentException("Static imports must not be empty!");
+        }
+
+        Collections.addAll(staticImports, classes);
+    }
+
     protected void startRunning() {
-        currentSandbox.set(this);
         this.running.set(true);
     }
 
     protected void stopRunning() {
         this.running.set(false);
-        currentSandbox.set(null);
     }
 
     protected GroovyScriptEngine createScriptEngine() {
         GroovyScriptEngine engine = new GroovyScriptEngine(this.scriptEnvironment);
         CompilerConfiguration config = new CompilerConfiguration(CompilerConfiguration.DEFAULT);
+        config.setSourceEncoding("UTF-8");
         engine.setConfig(config);
         initEngine(engine, config);
         return engine;
@@ -88,7 +97,6 @@ public abstract class GroovySandbox {
     }
 
     public void load() throws Exception {
-        currentSandbox.set(this);
         preRun();
 
         GroovyScriptEngine engine = createScriptEngine();
@@ -101,7 +109,6 @@ public abstract class GroovySandbox {
         } finally {
             running.set(false);
             postRun();
-            currentSandbox.set(null);
             setCurrentScript(null);
         }
     }
@@ -117,6 +124,7 @@ public abstract class GroovySandbox {
         for (File scriptFile : getScriptFiles()) {
             if (!executedClasses.contains(scriptFile)) {
                 Class<?> clazz = loadScriptClass(engine, scriptFile);
+                if (clazz == GroovyLog.class) continue; // preprocessor returned false
                 if (clazz == null) {
                     GroovyLog.get().errorMC("Error loading script for {}", scriptFile.getPath());
                     GroovyLog.get().errorMC("Did you forget to register your class file in your run config?");
@@ -128,11 +136,7 @@ public abstract class GroovySandbox {
                 }
                 if (shouldRunFile(scriptFile)) {
                     Script script = InvokerHelper.createScript(clazz, binding);
-                    if (run) {
-                        setCurrentScript(scriptFile.toString());
-                        script.run();
-                        setCurrentScript(null);
-                    }
+                    if (run) runScript(script);
                 }
             }
         }
@@ -142,6 +146,7 @@ public abstract class GroovySandbox {
         for (File classFile : getClassFiles()) {
             if (executedClasses.contains(classFile)) continue;
             Class<?> clazz = loadScriptClass(engine, classFile);
+            if (clazz == GroovyLog.class) continue; // preprocessor returned false
             if (clazz == null) {
                 // loading script fails if the file is a script that depends on a class file that isn't loaded yet
                 // we cant determine if the file is a script or a class
@@ -151,13 +156,15 @@ public abstract class GroovySandbox {
             if (clazz.getSuperclass() != Script.class && shouldRunFile(classFile)) {
                 executedClasses.add(classFile);
                 Script script = InvokerHelper.createScript(clazz, binding);
-                if (run) {
-                    setCurrentScript(script.toString());
-                    script.run();
-                    setCurrentScript(null);
-                }
+                if (run) runScript(script);
             }
         }
+    }
+
+    protected void runScript(Script script){
+        setCurrentScript(script.getClass().getName());
+        script.run();
+        setCurrentScript(null);
     }
 
     public <T> T runClosure(Closure<T> closure, Object... args) {
@@ -207,17 +214,16 @@ public abstract class GroovySandbox {
         return bindings;
     }
 
+    public Set<Class<?>> getStaticImports() {
+        return staticImports;
+    }
+
     public String getCurrentScript() {
         return currentScript;
     }
 
-    public int getCurrentLine() {
-        return currentLine;
-    }
-
     protected void setCurrentScript(String currentScript) {
         this.currentScript = currentScript;
-        this.currentLine = -1;
     }
 
     public static String getRelativePath(String source) {
@@ -232,7 +238,7 @@ public abstract class GroovySandbox {
         }
     }
 
-    private Class<?> loadScriptClass(GroovyScriptEngine engine, File file) {
+    protected Class<?> loadScriptClass(GroovyScriptEngine engine, File file) {
         Class<?> scriptClass = null;
         try {
             try {

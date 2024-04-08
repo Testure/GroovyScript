@@ -2,13 +2,12 @@ package com.cleanroommc.groovyscript.compat.mods.forestry;
 
 import com.cleanroommc.groovyscript.api.Result;
 import com.cleanroommc.groovyscript.compat.mods.ModPropertyContainer;
-import com.cleanroommc.groovyscript.gameobjects.GameObjectHandlerManager;
+import com.cleanroommc.groovyscript.gameobjects.GameObjectHandler;
 import forestry.api.apiculture.IAlleleBeeSpecies;
 import forestry.api.core.ForestryAPI;
 import forestry.api.genetics.AlleleManager;
 import forestry.apiculture.genetics.alleles.AlleleBeeSpecies;
 import forestry.modules.ForestryModuleUids;
-import org.jetbrains.annotations.Nullable;
 
 public class Forestry extends ModPropertyContainer {
 
@@ -39,25 +38,17 @@ public class Forestry extends ModPropertyContainer {
         addRegistry(beeMutations);
     }
 
-    @Override
-    public void initialize() {
-        GameObjectHandlerManager.registerGameObjectHandler("forestry", "species", Forestry::parseSpecies);
-    }
-
-    @Override
-    public @Nullable Object getProperty(String name) {
-        Object registry = super.getProperty(name);
-        if (registry instanceof ForestryRegistry<?> && !((ForestryRegistry<?>) registry).isEnabled()) return null;
-        return registry;
-    }
-
     public static Result<AlleleBeeSpecies> parseSpecies(String mainArg, Object... args) {
         if (!ForestryAPI.moduleManager.isModuleEnabled("forestry", ForestryModuleUids.APICULTURE)) {
             return Result.error("Can't get bee species while apiculture is disabled.");
         }
         String[] parts = mainArg.split(":");
         if (parts.length < 2) {
-            Result.error("Can't find bee species for '{}'", mainArg);
+            if (args.length > 0 && args[0] instanceof String s) {
+                parts = new String[]{parts[0], s};
+            } else {
+                Result.error("Can't find bee species for '{}'", mainArg);
+            }
         }
         IAlleleBeeSpecies species = (IAlleleBeeSpecies) AlleleManager.alleleRegistry.getAllele(parts[0] + "." + parts[1]);
         if (species instanceof AlleleBeeSpecies) return Result.some((AlleleBeeSpecies) species);
@@ -70,5 +61,14 @@ public class Forestry extends ModPropertyContainer {
     protected static String getNormalName(String name) {
         String capital = name.substring(0, 1).toUpperCase() + name.substring(1);
         return "species" + capital;
+    }
+
+    @Override
+    public void initialize() {
+        GameObjectHandler.builder("species", AlleleBeeSpecies.class)
+                .mod("forestry")
+                .parser(Forestry::parseSpecies)
+                .completerOfNamed(() -> AlleleManager.alleleRegistry.getRegisteredAlleles().keySet(), s -> s.replace('.', ':')) // elements don't have names
+                .register();
     }
 }

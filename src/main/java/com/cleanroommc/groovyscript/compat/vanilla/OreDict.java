@@ -3,6 +3,7 @@ package com.cleanroommc.groovyscript.compat.vanilla;
 import com.cleanroommc.groovyscript.api.GroovyBlacklist;
 import com.cleanroommc.groovyscript.api.GroovyLog;
 import com.cleanroommc.groovyscript.core.mixin.OreDictionaryAccessor;
+import com.cleanroommc.groovyscript.helper.Alias;
 import com.cleanroommc.groovyscript.helper.ingredient.IngredientHelper;
 import com.cleanroommc.groovyscript.registry.VirtualizedRegistry;
 import net.minecraft.block.Block;
@@ -18,7 +19,7 @@ import java.util.List;
 public class OreDict extends VirtualizedRegistry<OreDictEntry> {
 
     public OreDict() {
-        super();
+        super(Alias.generateOfClass(OreDict.class).andGenerate("OreDictionary"));
     }
 
     @Override

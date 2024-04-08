@@ -20,15 +20,20 @@
     "SlotCraftingAccess",
     "TileEntityPistonMixin",
     "groovy.AsmDecompilerMixin",
+    "groovy.ClassCollectorMixin",
+    "groovy.ClosureMixin",
     "groovy.CompUnitClassGenMixin",
+    "groovy.GroovyClassLoaderMixin",
     "groovy.Java8Mixin",
     "groovy.MetaClassImplMixin",
+    "loot.LoadTableEventMixin",
     "loot.LootPoolAccessor",
     "loot.LootTableAccessor",
     "loot.LootTableMixin"
   ],
   "client": [
     "DefaultResourcePackAccessor",
+    "GuiCreateWorldMixin",
     "GuiScreenMixin"
   ]
 }

@@ -26,12 +26,12 @@ public interface IGroovyContainer {
     String getModId();
 
     /**
-     * Returns the mod name of the compat mod. This will only be used for debugging.
+     * Returns the name of this container. Is only used for logging and debugging.
      *
-     * @return the compat mod name
+     * @return the name of the container
      */
     @NotNull
-    String getModName();
+    String getContainerName();
 
     /**
      * @return true if the compat mod is currently loaded.
@@ -46,7 +46,7 @@ public interface IGroovyContainer {
      */
     @NotNull
     default Collection<String> getAliases() {
-        return Collections.emptyList();
+        return Collections.singletonList(getModId());
     }
 
     /**
